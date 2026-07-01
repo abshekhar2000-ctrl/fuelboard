@@ -8,103 +8,129 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <title>FuelBoard — Daily Protein Tracker</title>
 <style>
   :root{
-    --bg:#22281F;
-    --panel:#2C3325;
-    --panel-2:#343C2B;
-    --ink:#F3F0E6;
-    --ink-dim:#B9C0A9;
-    --accent:#FF8A3D;
-    --accent-dim:#7D5230;
-    --good:#8FBF6B;
-    --line:#454F3A;
-    --display: 'Sora', 'Segoe UI', system-ui, sans-serif;
-    --body: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    --mono: 'JetBrains Mono', 'Courier New', monospace;
+    --bg:#22281F; --panel:#2C3325; --panel-2:#343C2B;
+    --ink:#F3F0E6; --ink-dim:#B9C0A9; --accent:#FF8A3D;
+    --accent-dim:#7D5230; --good:#8FBF6B; --line:#454F3A;
+    --display:'Sora','Segoe UI',system-ui,sans-serif;
+    --body:'Inter','Segoe UI',system-ui,sans-serif;
+    --mono:'JetBrains Mono','Courier New',monospace;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--bg); color:var(--ink);
-    font-family:var(--body); -webkit-font-smoothing:antialiased;
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);-webkit-font-smoothing:antialiased;}
+  #app{max-width:480px;margin:0 auto;padding:18px 16px 60px;}
+  header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;}
+  header .brand{font-family:var(--display);font-weight:700;font-size:1.4rem;letter-spacing:-0.02em;}
+  header .brand span{color:var(--accent);}
+  header .tagline{font-size:0.7rem;color:var(--ink-dim);text-transform:uppercase;letter-spacing:0.08em;}
+
+  /* Date nav */
+  .daynav{display:flex;align-items:center;justify-content:space-between;background:var(--panel);border-radius:14px;padding:6px;margin-bottom:14px;border:1px solid var(--line);}
+  .daynav button{background:none;border:none;color:var(--ink);font-size:1.1rem;padding:6px 12px;cursor:pointer;}
+  .daynav .datelabel{font-family:var(--mono);font-size:0.95rem;text-align:center;cursor:pointer;padding:4px 10px;border-radius:8px;transition:background .15s;}
+  .daynav .datelabel:hover{background:var(--panel-2);}
+  .daynav .datelabel small{display:block;color:var(--accent);font-size:0.62rem;letter-spacing:0.07em;text-align:center;}
+
+  /* Date picker modal */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:flex;align-items:center;justify-content:center;}
+  .modal-overlay.hidden{display:none;}
+  .datepicker{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;width:320px;max-width:92vw;}
+  .dp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .dp-head button{background:none;border:none;color:var(--ink);font-size:1.1rem;cursor:pointer;padding:4px 10px;}
+  .dp-monthyear{font-family:var(--display);font-weight:700;font-size:1rem;}
+  .dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
+  .dp-dayname{font-size:0.65rem;color:var(--ink-dim);padding:4px 0;font-family:var(--mono);}
+  .dp-day{padding:7px 2px;border-radius:8px;cursor:pointer;font-size:0.82rem;border:none;background:none;color:var(--ink);}
+  .dp-day:hover{background:var(--panel-2);}
+  .dp-day.today{background:var(--accent-dim);color:var(--ink);}
+  .dp-day.selected{background:var(--accent);color:#1c1306;font-weight:700;}
+  .dp-day.empty{cursor:default;}
+  .dp-close{margin-top:12px;width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:9px;font-size:0.85rem;cursor:pointer;}
+
+  /* Summary */
+  .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;}
+  .stat .label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--ink-dim);}
+  .stat .value{font-family:var(--display);font-size:1.5rem;font-weight:700;margin-top:2px;}
+  .stat .value small{font-size:0.85rem;color:var(--ink-dim);font-weight:500;}
+  .bar{height:5px;border-radius:3px;background:var(--line);margin-top:8px;overflow:hidden;}
+  .bar i{display:block;height:100%;background:var(--accent);}
+  .stat.protein .bar i{background:var(--good);}
+
+  .goal-row{display:flex;gap:8px;align-items:center;margin-top:10px;font-size:0.78rem;color:var(--ink-dim);}
+  .goal-row input{width:64px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:5px 7px;font-family:var(--mono);}
+
+  /* Section */
+  .section-title{font-family:var(--display);font-weight:700;font-size:0.95rem;margin:20px 0 8px;display:flex;align-items:center;gap:8px;}
+  .section-title .tag{font-family:var(--mono);font-size:0.65rem;color:var(--bg);background:var(--accent);padding:2px 7px;border-radius:6px;}
+
+  .add-row{display:flex;gap:8px;margin-bottom:10px;}
+  select.dish-select{flex:1;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:0.82rem;}
+  button.add-btn{background:var(--accent);border:none;color:#1c1306;font-weight:700;border-radius:10px;padding:9px 14px;font-size:0.85rem;cursor:pointer;}
+
+  .empty-slot{border:1px dashed var(--line);border-radius:14px;padding:16px;text-align:center;color:var(--ink-dim);font-size:0.85rem;margin-bottom:10px;}
+
+  /* Meal card */
+  .meal-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+  .meal-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;}
+  .meal-head .name{font-weight:600;font-size:0.92rem;}
+  .meal-head .meta{font-size:0.7rem;color:var(--ink-dim);font-family:var(--mono);display:flex;gap:8px;margin-top:3px;flex-wrap:wrap;}
+  .meal-head .chev{color:var(--ink-dim);transition:transform .2s;flex-shrink:0;}
+  .meal-card.open .chev{transform:rotate(90deg);}
+  .meal-actions{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+  .pill-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:4px 8px;font-size:0.68rem;cursor:pointer;}
+  .pill-btn.remove{color:#E68A8A;}
+  .pill-btn.edit{color:var(--accent);}
+  .meal-body{display:none;padding:0 14px 14px;border-top:1px solid var(--line);}
+  .meal-card.open .meal-body{display:block;}
+  .steps{list-style:none;padding:0;margin:10px 0 0;counter-reset:step;}
+  .steps li{counter-increment:step;padding:6px 0 6px 28px;position:relative;font-size:0.85rem;color:var(--ink-dim);border-top:1px dashed var(--line);}
+  .steps li:first-child{border-top:none;}
+  .steps li::before{content:counter(step);position:absolute;left:0;top:6px;width:18px;height:18px;border-radius:50%;background:var(--accent-dim);color:var(--ink);font-size:0.65rem;display:flex;align-items:center;justify-content:center;font-family:var(--mono);}
+
+  /* Custom dish form */
+  .custom-box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:18px;}
+  .custom-box h3{margin:0 0 10px;font-family:var(--display);font-size:0.95rem;display:flex;justify-content:space-between;align-items:center;}
+  .custom-box h3 .toggle{font-size:0.75rem;color:var(--accent);cursor:pointer;font-weight:600;}
+  .custom-form{display:none;}
+  .custom-form.open{display:block;}
+  .field-row{display:flex;gap:8px;margin-bottom:8px;}
+  .field-row label{font-size:0.7rem;color:var(--ink-dim);display:block;margin-bottom:3px;}
+  .field-col{flex:1;}
+  input[type=text],input[type=number],select.std,textarea{
+    width:100%;background:var(--panel-2);color:var(--ink);border:1px solid var(--line);
+    border-radius:9px;padding:8px 10px;font-size:0.85rem;font-family:var(--body);
   }
-  #app{ max-width:480px; margin:0 auto; padding:18px 16px 60px; }
+  textarea{resize:vertical;min-height:70px;font-size:0.82rem;line-height:1.4;}
 
-  header{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
-  header .brand{ font-family:var(--display); font-weight:700; font-size:1.4rem; letter-spacing:-0.02em; }
-  header .brand span{ color:var(--accent); }
-  header .tagline{ font-size:0.7rem; color:var(--ink-dim); text-transform:uppercase; letter-spacing:0.08em; }
+  /* Free-text ingredient rows */
+  .ing-row{display:grid;grid-template-columns:1fr 80px 70px 28px;gap:5px;margin-bottom:6px;align-items:center;}
+  .ing-row input{min-width:0;}
+  .ing-del{background:none;border:none;color:#E68A8A;font-size:1rem;cursor:pointer;padding:0;text-align:center;}
 
-  .daynav{ display:flex; align-items:center; justify-content:space-between; background:var(--panel); border-radius:14px; padding:10px 6px; margin-bottom:14px; border:1px solid var(--line);}
-  .daynav button{ background:none; border:none; color:var(--ink); font-size:1.1rem; padding:6px 14px; cursor:pointer; }
-  .daynav .datelabel{ font-family:var(--mono); font-size:0.95rem; }
-  .daynav .datelabel small{ display:block; color:var(--ink-dim); font-size:0.65rem; text-align:center; letter-spacing:0.05em; }
+  .small-btn{background:var(--panel-2);border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:0.75rem;cursor:pointer;margin-top:2px;}
+  .live-calc{font-family:var(--mono);font-size:0.78rem;color:var(--good);margin:8px 0;padding:8px 10px;background:var(--panel-2);border-radius:9px;}
+  .save-custom{width:100%;margin-top:6px;background:var(--accent);border:none;color:#1c1306;font-weight:700;border-radius:10px;padding:10px;font-size:0.85rem;cursor:pointer;}
+  .custom-tag{font-family:var(--mono);font-size:0.6rem;background:var(--good);color:#16240c;padding:1px 6px;border-radius:5px;margin-left:6px;}
 
-  .summary{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-  .stat{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px 14px; position:relative; overflow:hidden; }
-  .stat .label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.07em; color:var(--ink-dim); }
-  .stat .value{ font-family:var(--display); font-size:1.5rem; font-weight:700; margin-top:2px; }
-  .stat .value small{ font-size:0.85rem; color:var(--ink-dim); font-weight:500; }
-  .bar{ height:5px; border-radius:3px; background:var(--line); margin-top:8px; overflow:hidden;}
-  .bar i{ display:block; height:100%; background:var(--accent); }
-  .stat.protein .bar i{ background:var(--good); }
+  /* Custom dish list in manage panel */
+  .manage-list{margin-top:10px;}
+  .manage-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--panel-2);border-radius:10px;margin-bottom:6px;font-size:0.82rem;}
+  .manage-item .mi-name{flex:1;font-weight:600;}
+  .manage-item .mi-meta{font-size:0.68rem;color:var(--ink-dim);font-family:var(--mono);}
+  .manage-actions{display:flex;gap:5px;flex-shrink:0;}
 
-  .section-title{ font-family:var(--display); font-weight:700; font-size:0.95rem; margin:20px 0 8px; display:flex; align-items:center; gap:8px; }
-  .section-title .tag{ font-family:var(--mono); font-size:0.65rem; color:var(--bg); background:var(--accent); padding:2px 7px; border-radius:6px; }
+  /* Edit modal */
+  .edit-modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;width:340px;max-width:94vw;max-height:85vh;overflow-y:auto;}
 
-  .meal-card{ background:var(--panel); border:1px solid var(--line); border-radius:14px; margin-bottom:10px; overflow:hidden; }
-  .meal-head{ display:flex; justify-content:space-between; align-items:center; padding:12px 14px; cursor:pointer; }
-  .meal-head .name{ font-weight:600; font-size:0.95rem; }
-  .meal-head .meta{ font-size:0.72rem; color:var(--ink-dim); font-family:var(--mono); display:flex; gap:8px; margin-top:3px;}
-  .meal-head .chev{ color:var(--ink-dim); transition:transform .2s; }
-  .meal-card.open .chev{ transform:rotate(90deg); }
-  .meal-actions{ display:flex; gap:6px; align-items:center; }
-  .pill-btn{ background:var(--panel-2); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:5px 10px; font-size:0.72rem; cursor:pointer; }
-  .pill-btn.remove{ color:#E68A8A; }
-  .meal-body{ display:none; padding:0 14px 14px; border-top:1px solid var(--line); }
-  .meal-card.open .meal-body{ display:block; }
-  .steps{ list-style:none; padding:0; margin:10px 0 0; counter-reset:step; }
-  .steps li{ counter-increment:step; padding:6px 0 6px 28px; position:relative; font-size:0.85rem; color:var(--ink-dim); border-top:1px dashed var(--line); }
-  .steps li:first-child{ border-top:none; }
-  .steps li::before{ content:counter(step); position:absolute; left:0; top:6px; width:18px; height:18px; border-radius:50%; background:var(--accent-dim); color:var(--ink); font-size:0.65rem; display:flex; align-items:center; justify-content:center; font-family:var(--mono); }
-
-  .empty-slot{ border:1px dashed var(--line); border-radius:14px; padding:16px; text-align:center; color:var(--ink-dim); font-size:0.85rem; margin-bottom:10px; }
-
-  .add-row{ display:flex; gap:8px; margin-top:4px; }
-  select.dish-select{ flex:1; background:var(--panel-2); color:var(--ink); border:1px solid var(--line); border-radius:10px; padding:9px 10px; font-size:0.85rem; }
-  button.add-btn{ background:var(--accent); border:none; color:#1c1306; font-weight:700; border-radius:10px; padding:9px 14px; font-size:0.85rem; cursor:pointer; }
-
-  .goal-row{ display:flex; gap:8px; align-items:center; margin-top:10px; font-size:0.78rem; color:var(--ink-dim); }
-  .goal-row input{ width:64px; background:var(--panel-2); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:5px 7px; font-family:var(--mono); }
-
-  .toast{ position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--panel-2); border:1px solid var(--line); color:var(--ink); padding:10px 16px; border-radius:10px; font-size:0.8rem; opacity:0; transition:opacity .25s; pointer-events:none; }
-  .toast.show{ opacity:1; }
-
-  .custom-box{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:18px; }
-  .custom-box h3{ margin:0 0 10px; font-family:var(--display); font-size:0.95rem; display:flex; justify-content:space-between; align-items:center; }
-  .custom-box h3 .toggle{ font-size:0.75rem; color:var(--accent); cursor:pointer; font-weight:600; }
-  .custom-form{ display:none; }
-  .custom-form.open{ display:block; }
-  .field-row{ display:flex; gap:8px; margin-bottom:8px; }
-  .field-row label{ font-size:0.7rem; color:var(--ink-dim); display:block; margin-bottom:3px; }
-  .field-col{ flex:1; }
-  input[type=text], input[type=number], select.std, textarea{
-    width:100%; background:var(--panel-2); color:var(--ink); border:1px solid var(--line);
-    border-radius:9px; padding:8px 10px; font-size:0.85rem; font-family:var(--body);
-  }
-  textarea{ resize:vertical; min-height:70px; font-size:0.82rem; line-height:1.4; }
-  .ing-row{ display:flex; gap:6px; margin-bottom:6px; align-items:center; }
-  .ing-row select{ flex:1.4; }
-  .ing-row input{ flex:0.7; }
-  .ing-row .ing-del{ background:none; border:none; color:#E68A8A; font-size:1rem; cursor:pointer; padding:0 4px; }
-  .small-btn{ background:var(--panel-2); border:1px solid var(--line); color:var(--ink); border-radius:8px; padding:6px 10px; font-size:0.75rem; cursor:pointer; margin-top:2px; }
-  .live-calc{ font-family:var(--mono); font-size:0.78rem; color:var(--good); margin:8px 0; padding:8px 10px; background:var(--panel-2); border-radius:9px; }
-  .save-custom{ width:100%; margin-top:6px; background:var(--accent); border:none; color:#1c1306; font-weight:700; border-radius:10px; padding:10px; font-size:0.85rem; cursor:pointer; }
-  .custom-tag{ font-family:var(--mono); font-size:0.6rem; background:var(--good); color:#16240c; padding:1px 6px; border-radius:5px; margin-left:6px; }
-
-  ::-webkit-scrollbar{ width:0; height:0;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--line);color:var(--ink);padding:10px 16px;border-radius:10px;font-size:0.8rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:200;}
+  .toast.show{opacity:1;}
+  .ing-head{display:grid;grid-template-columns:1fr 80px 70px 28px;gap:5px;margin-bottom:3px;}
+  .ing-head span{font-size:0.65rem;color:var(--ink-dim);}
+  ::-webkit-scrollbar{width:0;height:0;}
 </style>
 </head>
 <body>
@@ -118,8 +144,21 @@
 
   <div class="daynav">
     <button id="prevDay">‹</button>
-    <div class="datelabel" id="dateLabel"><small>TODAY</small>—</div>
+    <div class="datelabel" id="dateLabel" title="Tap to pick a date"><small>TODAY</small>—</div>
     <button id="nextDay">›</button>
+  </div>
+
+  <!-- Date picker modal -->
+  <div class="modal-overlay hidden" id="datePickerOverlay">
+    <div class="datepicker">
+      <div class="dp-head">
+        <button id="dpPrevMonth">‹</button>
+        <div class="dp-monthyear" id="dpMonthYear"></div>
+        <button id="dpNextMonth">›</button>
+      </div>
+      <div class="dp-grid" id="dpGrid"></div>
+      <button class="dp-close" id="dpClose">Cancel</button>
+    </div>
   </div>
 
   <div class="summary">
@@ -140,15 +179,17 @@
     Protein: <input id="proGoal" type="number" value="120"> g
   </div>
 
+  <!-- Create/Edit custom dish form -->
   <div class="custom-box">
-    <h3>Create Your Own Dish <span class="toggle" id="toggleCustom">+ Add custom dish</span></h3>
+    <h3>My Recipes <span class="toggle" id="toggleCustom">+ Add new recipe</span></h3>
     <div class="custom-form" id="customForm">
+      <input type="hidden" id="editId">
       <div class="field-row">
         <div class="field-col">
           <label>Dish name</label>
           <input type="text" id="cName" placeholder="e.g. My Veg Pulao">
         </div>
-        <div class="field-col" style="flex:0.6">
+        <div class="field-col" style="flex:0.55">
           <label>Meal</label>
           <select class="std" id="cSlot">
             <option value="breakfast">Breakfast</option>
@@ -156,131 +197,144 @@
             <option value="dinner">Dinner</option>
           </select>
         </div>
-        <div class="field-col" style="flex:0.5">
-          <label>Prep time (min)</label>
+        <div class="field-col" style="flex:0.45">
+          <label>Time (min)</label>
           <input type="number" id="cTime" placeholder="10">
         </div>
       </div>
 
-      <label>Ingredients (protein & calories auto-calculate)</label>
+      <label style="font-size:0.7rem;color:var(--ink-dim);">Ingredients (name · qty · unit like g/ml/cup/piece)</label>
+      <div class="ing-head">
+        <span>Ingredient name</span><span>Qty</span><span>Unit</span><span></span>
+      </div>
       <div id="ingRows"></div>
       <button class="small-btn" id="addIngRow">+ Add ingredient</button>
 
       <div class="live-calc" id="liveCalc">Estimated: 0 kcal · 0g protein</div>
 
-      <label>Steps to cook (one step per line)</label>
-      <textarea id="cSteps" placeholder="1. Wash and soak rice for 5 min
-2. Heat oil, add veggies...
-3. Add rice and water, cook 12 min"></textarea>
+      <label style="font-size:0.7rem;color:var(--ink-dim);display:block;margin-bottom:3px;">Steps to cook (one per line)</label>
+      <textarea id="cSteps" placeholder="e.g.&#10;Wash and soak rice for 5 min&#10;Heat oil, add veggies...&#10;Add rice and water, cook 12 min"></textarea>
 
-      <button class="save-custom" id="saveCustom">Save Dish</button>
+      <button class="save-custom" id="saveCustom">Save Recipe</button>
+      <button class="small-btn" id="cancelEdit" style="width:100%;margin-top:6px;display:none;">Cancel</button>
     </div>
+
+    <!-- List of saved custom recipes -->
+    <div class="manage-list" id="manageList"></div>
   </div>
 
   <div id="slots"></div>
 </div>
 
+<!-- Edit modal overlay (reuses the same form via JS) -->
+<div class="modal-overlay hidden" id="editOverlay">
+  <div class="edit-modal" id="editModalContent"></div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// Local-storage backed shim so the rest of the app's storage calls work unchanged
-// on a real, standalone PWA (Claude's artifact storage API isn't available here).
 window.storage = {
-  async get(key){
-    const raw = localStorage.getItem('fb:'+key);
-    if(raw === null) return null;
-    return { key, value: raw };
-  },
-  async set(key, value){
-    localStorage.setItem('fb:'+key, value);
-    return { key, value };
-  },
-  async delete(key){
-    localStorage.removeItem('fb:'+key);
-    return { key, deleted:true };
-  },
-  async list(prefix=''){
-    const keys = Object.keys(localStorage)
-      .filter(k=>k.startsWith('fb:'+prefix))
-      .map(k=>k.slice(3));
-    return { keys };
-  }
+  async get(key){ const r=localStorage.getItem('fb:'+key); if(r===null) return null; return{key,value:r}; },
+  async set(key,value){ localStorage.setItem('fb:'+key,value); return{key,value}; },
+  async delete(key){ localStorage.removeItem('fb:'+key); return{key,deleted:true}; },
+  async list(prefix=''){ const keys=Object.keys(localStorage).filter(k=>k.startsWith('fb:'+prefix)).map(k=>k.slice(3)); return{keys}; }
 };
-
 if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
-  });
+  window.addEventListener('load',()=>{ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); });
 }
 </script>
 <script>
 const DISHES = {
   breakfast: [
-    {id:'b1', name:'Greek Yogurt + Berries + Almonds', time:5, cal:280, pro:24, steps:['Take 200g (1 cup) thick Greek yogurt in a bowl.','Wash and add 100g mixed berries (strawberries/blueberries) on top.','Crush 10 almonds (~12g) and sprinkle over.','Drizzle 1 tsp honey if desired. Mix lightly and serve immediately.']},
-    {id:'b2', name:'3-Egg Veggie Omelette', time:10, cal:320, pro:27, steps:['Crack 3 large eggs into a bowl, add a pinch of salt and pepper, whisk for 30 sec until frothy.','Finely chop 2 tbsp onion, 2 tbsp tomato, and a handful (20g) of spinach.','Heat 1 tsp oil/butter in a non-stick pan on medium for 1 min.','Pour in eggs, swirl to spread evenly; after 1 min sprinkle veggies on top.','Once edges set (about 2 min), fold omelette in half.','Cook covered on low heat 2 more min until fully set. Serve hot.']},
-    {id:'b3', name:'Protein Oats with Peanut Butter', time:8, cal:350, pro:22, steps:['Add 40g (½ cup) rolled oats and 200ml milk to a saucepan.','Cook on medium-low, stirring, for 4–5 min until thick and creamy.','Remove from heat, let cool 1 min, then stir in 1 scoop (about 25g) whey/plant protein powder.','Top with 1 tbsp peanut butter and ½ sliced banana. Serve warm.']},
-    {id:'b4', name:'Paneer Bhurji + 1 Roti', time:12, cal:380, pro:26, steps:['Crumble 150g paneer with your hands or a fork into small bits.','Heat 1 tsp oil in a pan; sauté 2 tbsp chopped onion, 2 tbsp tomato, and 1 chopped green chili for 2 min.','Add ¼ tsp turmeric, ½ tsp salt, ¼ tsp red chili powder; stir for 30 sec.','Add crumbled paneer, mix well, cook 3–4 min on medium heat.','Garnish with chopped coriander. Serve with 1 warm whole-wheat roti.']},
-    {id:'b5', name:'Cottage Cheese Toast', time:5, cal:260, pro:20, steps:['Toast 2 slices of whole-grain bread until golden (2–3 min).','Spread 100g cottage cheese or hung curd evenly on both slices.','Top with cracked black pepper, a pinch of chili flakes, and 5–6 thin cucumber slices.','Serve open-faced or as a sandwich.']},
-    {id:'b6', name:'Sprouts & Peanut Chaat', time:7, cal:300, pro:18, steps:['Take 1 cup (100g) boiled moong/mixed sprouts in a bowl.','Add 2 tbsp roasted peanuts, 2 tbsp chopped onion, 2 tbsp chopped tomato.','Squeeze ½ lemon, add ½ tsp chaat masala and a pinch of salt.','Toss everything together and top with chopped coriander. Serve fresh.']},
-    {id:'b7', name:'Besan (Chickpea Flour) Veggie Pancake', time:10, cal:310, pro:18, steps:['Mix 60g (½ cup) besan with 100ml water to a smooth, lump-free batter.','Add 2 tbsp grated carrot, 2 tbsp chopped onion, ¼ tsp turmeric, ½ tsp salt, a pinch of ajwain.','Heat 1 tsp oil on a non-stick pan/tawa on medium heat.','Pour a ladle of batter, spread into a 6-inch circle, cook 2 min per side until golden.','Serve hot with mint chutney or ketchup.']},
-    {id:'b8', name:'Egg Bhurji (Indian Scrambled Eggs)', time:8, cal:300, pro:22, steps:['Whisk 3 eggs with a pinch of salt in a bowl.','Heat 1 tsp oil/ghee; sauté 2 tbsp chopped onion, 1 chopped green chili, 2 tbsp tomato for 2 min.','Add ¼ tsp turmeric and ¼ tsp red chili powder, stir 20 sec.','Pour in eggs, scramble continuously on medium-low heat for 2–3 min until just set.','Garnish with coriander, serve hot — great with toast or roti.']}
+    {id:'b1',name:'Greek Yogurt + Berries + Almonds',time:5,cal:280,pro:24,steps:['Take 200g (1 cup) thick Greek yogurt in a bowl.','Wash and add 100g mixed berries (strawberries/blueberries) on top.','Crush 10 almonds (~12g) and sprinkle over.','Drizzle 1 tsp honey if desired. Mix lightly and serve immediately.']},
+    {id:'b2',name:'3-Egg Veggie Omelette',time:10,cal:320,pro:27,steps:['Crack 3 large eggs into a bowl, add a pinch of salt and pepper, whisk for 30 sec until frothy.','Finely chop 2 tbsp onion, 2 tbsp tomato, and a handful (20g) of spinach.','Heat 1 tsp oil/butter in a non-stick pan on medium for 1 min.','Pour in eggs, swirl to spread evenly; after 1 min sprinkle veggies on top.','Once edges set (about 2 min), fold omelette in half.','Cook covered on low heat 2 more min until fully set. Serve hot.']},
+    {id:'b3',name:'Protein Oats with Peanut Butter',time:8,cal:350,pro:22,steps:['Add 40g (½ cup) rolled oats and 200ml milk to a saucepan.','Cook on medium-low, stirring, for 4–5 min until thick and creamy.','Remove from heat, let cool 1 min, then stir in 1 scoop (about 25g) protein powder.','Top with 1 tbsp peanut butter and ½ sliced banana. Serve warm.']},
+    {id:'b4',name:'Paneer Bhurji + 1 Roti',time:12,cal:380,pro:26,steps:['Crumble 150g paneer with your hands or a fork into small bits.','Heat 1 tsp oil in a pan; sauté 2 tbsp chopped onion, 2 tbsp tomato, and 1 chopped green chili for 2 min.','Add ¼ tsp turmeric, ½ tsp salt, ¼ tsp red chili powder; stir for 30 sec.','Add crumbled paneer, mix well, cook 3–4 min on medium heat.','Garnish with chopped coriander. Serve with 1 warm whole-wheat roti.']},
+    {id:'b5',name:'Cottage Cheese Toast',time:5,cal:260,pro:20,steps:['Toast 2 slices of whole-grain bread until golden (2–3 min).','Spread 100g cottage cheese or hung curd evenly on both slices.','Top with cracked black pepper, a pinch of chili flakes, and 5–6 thin cucumber slices.','Serve open-faced or as a sandwich.']},
+    {id:'b6',name:'Sprouts & Peanut Chaat',time:7,cal:300,pro:18,steps:['Take 1 cup (100g) boiled moong/mixed sprouts in a bowl.','Add 2 tbsp roasted peanuts, 2 tbsp chopped onion, 2 tbsp chopped tomato.','Squeeze ½ lemon, add ½ tsp chaat masala and a pinch of salt.','Toss everything together and top with chopped coriander. Serve fresh.']},
+    {id:'b7',name:'Besan Veggie Pancake (Chilla)',time:10,cal:310,pro:18,steps:['Mix 60g (½ cup) besan with 100ml water to a smooth, lump-free batter.','Add 2 tbsp grated carrot, 2 tbsp chopped onion, ¼ tsp turmeric, ½ tsp salt, a pinch of ajwain.','Heat 1 tsp oil on a non-stick pan on medium heat.','Pour a ladle of batter, spread into a 6-inch circle, cook 2 min per side until golden.','Serve hot with mint chutney or ketchup.']},
+    {id:'b8',name:'Egg Bhurji (Indian Scrambled Eggs)',time:8,cal:300,pro:22,steps:['Whisk 3 eggs with a pinch of salt in a bowl.','Heat 1 tsp oil/ghee; sauté 2 tbsp chopped onion, 1 chopped green chili, 2 tbsp tomato for 2 min.','Add ¼ tsp turmeric and ¼ tsp red chili powder, stir 20 sec.','Pour in eggs, scramble continuously on medium-low heat for 2–3 min until just set.','Garnish with coriander, serve hot with toast or roti.']}
   ],
   lunch: [
-    {id:'l1', name:'Rajma (Kidney Beans) + Rice', time:15, cal:420, pro:24, steps:['Heat 1 tsp oil; sauté 2 tbsp chopped onion, 1 tsp garlic-ginger paste for 2 min until fragrant.','Add 2 tbsp chopped tomato, ½ tsp turmeric, 1 tsp red chili powder, 1 tsp rajma masala; cook 2 min.','Add 1.5 cups cooked or canned rajma (kidney beans) with ½ cup water.','Simmer 8 min, lightly mashing a few beans to thicken the gravy.','Season with salt, garnish with coriander. Serve over 1 cup cooked rice.']},
-    {id:'l2', name:'Paneer Tikka Bowl', time:14, cal:440, pro:30, steps:['Cut 150g paneer into 1-inch cubes.','Mix 3 tbsp yogurt with 1 tsp tikka masala, ½ tsp turmeric, ½ tsp salt, 1 tsp lemon juice in a bowl.','Coat paneer cubes in the marinade, rest 10 min (or skip if short on time).','Heat 1 tsp oil in a pan, pan-sear paneer 6–8 min, turning until edges char slightly.','Sauté ½ cup sliced bell pepper and onion separately for 4 min.','Plate paneer and veggies over 1 cup cooked brown rice or quinoa.']},
-    {id:'l3', name:'Egg Curry + 2 Rotis', time:15, cal:460, pro:28, steps:['Boil 3 eggs for 9–10 min, cool in cold water, peel and halve.','Heat 1 tsp oil; sauté 2 tbsp chopped onion until golden, 3 min.','Add 1 tsp ginger-garlic paste, 2 tbsp tomato puree, ½ tsp turmeric, 1 tsp chili powder, 1 tsp coriander powder; cook 3 min.','Add ½ cup water, simmer 5 min until gravy thickens.','Add boiled eggs cut-side up, simmer 2–3 min. Serve with two whole-wheat rotis.']},
-    {id:'l4', name:'Chickpea (Chole) Salad Bowl', time:10, cal:400, pro:22, steps:['Drain and rinse 1.5 cups boiled/canned chickpeas.','Chop ¼ cucumber, ¼ cup tomato, 2 tbsp red onion, and add to a bowl with chickpeas.','Add 50g crumbled feta or paneer, a handful of mint/coriander.','Whisk 1 tbsp olive oil, juice of ½ lemon, salt, and pepper; pour over and toss well.']},
-    {id:'l5', name:'Soya Chunks (Soya Bean) Curry + Rice', time:15, cal:410, pro:32, steps:['Soak 1 cup soya chunks in hot water for 5 min, then squeeze out excess water.','Heat 1 tsp oil; sauté 2 tbsp onion, 1 tsp ginger-garlic paste for 2 min.','Add 2 tbsp tomato puree, ½ tsp turmeric, 1 tsp garam masala, 1 tsp chili powder; cook 2 min.','Add soya chunks and ½ cup water; simmer 7–8 min until gravy thickens.','Season with salt and coriander. Serve over 1 cup cooked rice.']},
-    {id:'l6', name:'Paneer & Veg Whole-Wheat Wrap', time:10, cal:380, pro:26, steps:['Crumble or cube 100g paneer; pan-fry in 1 tsp oil with ½ tsp chaat masala for 3–4 min until lightly golden.','Warm 1 whole-wheat tortilla/roti on a dry pan for 30 sec each side.','Spread 1 tbsp hung curd or mint chutney on the tortilla.','Layer paneer, shredded lettuce, sliced cucumber, and grated carrot.','Roll tightly into a wrap and slice in half to serve.']},
-    {id:'l7', name:'Moong Dal Khichdi (High-Protein)', time:15, cal:390, pro:20, steps:['Wash and combine ½ cup rice with ½ cup split moong dal.','Pressure cook with 2.5 cups water, ½ tsp turmeric, and salt for 8–10 min (3 whistles).','Heat 1 tsp ghee in a small pan, add cumin seeds and a pinch of hing; let it sizzle 30 sec.','Pour tempering over the cooked khichdi and mix well. Serve hot with a side of yogurt.']}
+    {id:'l1',name:'Rajma (Kidney Beans) + Rice',time:15,cal:420,pro:24,steps:['Heat 1 tsp oil; sauté 2 tbsp chopped onion, 1 tsp garlic-ginger paste for 2 min until fragrant.','Add 2 tbsp chopped tomato, ½ tsp turmeric, 1 tsp red chili powder, 1 tsp rajma masala; cook 2 min.','Add 1.5 cups cooked or canned rajma (kidney beans) with ½ cup water.','Simmer 8 min, lightly mashing a few beans to thicken the gravy.','Season with salt, garnish with coriander. Serve over 1 cup cooked rice.']},
+    {id:'l2',name:'Paneer Tikka Bowl',time:14,cal:440,pro:30,steps:['Cut 150g paneer into 1-inch cubes.','Mix 3 tbsp yogurt with 1 tsp tikka masala, ½ tsp turmeric, ½ tsp salt, 1 tsp lemon juice.','Coat paneer in the marinade, rest 10 min.','Heat 1 tsp oil, pan-sear paneer 6–8 min, turning until edges char slightly.','Sauté ½ cup sliced bell pepper and onion separately for 4 min.','Plate paneer and veggies over 1 cup cooked brown rice or quinoa.']},
+    {id:'l3',name:'Egg Curry + 2 Rotis',time:15,cal:460,pro:28,steps:['Boil 3 eggs for 9–10 min, cool in cold water, peel and halve.','Heat 1 tsp oil; sauté 2 tbsp chopped onion until golden, 3 min.','Add 1 tsp ginger-garlic paste, 2 tbsp tomato puree, ½ tsp turmeric, 1 tsp chili powder; cook 3 min.','Add ½ cup water, simmer 5 min until gravy thickens.','Add boiled eggs cut-side up, simmer 2–3 min. Serve with two whole-wheat rotis.']},
+    {id:'l4',name:'Chickpea (Chole) Salad Bowl',time:10,cal:400,pro:22,steps:['Drain and rinse 1.5 cups boiled/canned chickpeas.','Chop ¼ cucumber, ¼ cup tomato, 2 tbsp red onion, add to a bowl with chickpeas.','Add 50g crumbled feta or paneer, a handful of mint/coriander.','Whisk 1 tbsp olive oil, juice of ½ lemon, salt, and pepper; pour over and toss well.']},
+    {id:'l5',name:'Soya Chunks Curry + Rice',time:15,cal:410,pro:32,steps:['Soak 1 cup soya chunks in hot water for 5 min, then squeeze out excess water.','Heat 1 tsp oil; sauté 2 tbsp onion, 1 tsp ginger-garlic paste for 2 min.','Add 2 tbsp tomato puree, ½ tsp turmeric, 1 tsp garam masala, 1 tsp chili powder; cook 2 min.','Add soya chunks and ½ cup water; simmer 7–8 min until gravy thickens.','Season with salt and coriander. Serve over 1 cup cooked rice.']},
+    {id:'l6',name:'Paneer & Veg Whole-Wheat Wrap',time:10,cal:380,pro:26,steps:['Crumble or cube 100g paneer; pan-fry in 1 tsp oil with ½ tsp chaat masala for 3–4 min until lightly golden.','Warm 1 whole-wheat tortilla/roti on a dry pan for 30 sec each side.','Spread 1 tbsp hung curd or mint chutney on the tortilla.','Layer paneer, shredded lettuce, sliced cucumber, and grated carrot.','Roll tightly into a wrap and slice in half to serve.']},
+    {id:'l7',name:'Moong Dal Khichdi',time:15,cal:390,pro:20,steps:['Wash and combine ½ cup rice with ½ cup split moong dal.','Pressure cook with 2.5 cups water, ½ tsp turmeric, and salt for 8–10 min (3 whistles).','Heat 1 tsp ghee in a small pan, add cumin seeds and a pinch of hing; let it sizzle 30 sec.','Pour tempering over the cooked khichdi and mix well. Serve hot with a side of yogurt.']}
   ],
   dinner: [
-    {id:'d1', name:'Moong Dal + Sautéed Spinach', time:14, cal:340, pro:22, steps:['Wash 1 cup split yellow moong dal; pressure cook with 2 cups water, ¼ tsp turmeric, and salt for 8 min (2 whistles).','Heat 1 tsp ghee in a small pan; add ½ tsp cumin seeds, 1 chopped garlic clove, and 1 dry red chili — let sizzle 30 sec.','Pour tempering over the cooked dal and mix.','In another pan, sauté a bunch (150g) of washed spinach with 1 chopped garlic clove in ½ tsp oil for 3–4 min until wilted.','Serve dal hot alongside the sautéed spinach (skip rice for a lighter dinner).']},
-    {id:'d2', name:'Tofu & Veg Stir-Fry', time:12, cal:330, pro:24, steps:['Press 150g firm tofu under a weight for 5 min to remove water, then cube it.','Heat 1 tsp oil in a pan on high; pan-fry tofu cubes 4–5 min until golden on all sides, then set aside.','In the same pan, stir-fry 1 cup mixed chopped vegetables (broccoli, bell pepper, carrot) for 3–4 min.','Return tofu to the pan, add 1 tbsp soy sauce, ½ tsp grated ginger, and ½ tsp garlic; toss for 2 min.','Serve hot, optionally over a small portion of steamed rice.']},
-    {id:'d3', name:'Palak Paneer (Spinach + Cottage Cheese)', time:15, cal:380, pro:26, steps:['Blanch 200g spinach in boiling water for 2 min, then blend into a smooth purée.','Heat 1 tsp oil/ghee; sauté 2 tbsp chopped onion and 1 tsp ginger-garlic paste for 2 min.','Add ¼ tsp turmeric, 1 tsp garam masala, and the spinach purée; cook 4 min.','Add 150g paneer cubes and 2 tbsp fresh cream (or yogurt); simmer 3–4 min.','Season with salt, serve with a small roti or on its own.']},
-    {id:'d4', name:'Egg Drop Veg Soup + Toast', time:10, cal:300, pro:20, steps:['Bring 2 cups vegetable broth/water to a boil with 1 tsp soy sauce and ½ tsp grated ginger.','Add ½ cup chopped vegetables (carrot, beans, cabbage); simmer 4 min.','Whisk 2 eggs and slowly drizzle into the simmering soup while stirring gently to form ribbons.','Cook 1 more min, season with salt and pepper.','Serve hot with 1 slice of toasted whole-grain bread.']},
-    {id:'d5', name:'Chana Masala (Chickpea Curry) + Roti', time:15, cal:360, pro:22, steps:['Heat 1 tsp oil; sauté 2 tbsp chopped onion until golden, 3 min.','Add 1 tsp ginger-garlic paste, 2 tbsp tomato purée, ½ tsp turmeric, 1 tsp chana masala; cook 3 min.','Add 1.5 cups boiled/canned chickpeas with ¼ cup water; simmer 6–7 min, mashing a few for thickness.','Season with salt and lemon juice, garnish with coriander.','Serve with one warm whole-wheat roti.']},
-    {id:'d6', name:'Mushroom & Egg Bhurji', time:10, cal:310, pro:24, steps:['Slice 100g mushrooms and chop 2 tbsp onion.','Heat 1 tsp oil; sauté onion 2 min, then add mushrooms and cook 3–4 min until softened.','Whisk 2 eggs with a pinch of salt and pepper; pour into the pan.','Scramble continuously for 2–3 min on medium-low heat until just set.','Garnish with coriander, serve warm on its own or with toast.']},
-    {id:'d7', name:'Sprouted Moong Stir-Fry', time:8, cal:280, pro:18, steps:['Heat 1 tsp oil in a pan; add ½ tsp mustard or cumin seeds, let them splutter.','Add 1 cup sprouted moong beans and ½ cup chopped tomato.','Stir-fry on medium heat for 5–6 min until sprouts are just tender.','Season with salt, turmeric, and a squeeze of lemon. Serve hot.']}
+    {id:'d1',name:'Moong Dal + Sautéed Spinach',time:14,cal:340,pro:22,steps:['Wash 1 cup split yellow moong dal; pressure cook with 2 cups water, ¼ tsp turmeric, and salt for 8 min (2 whistles).','Heat 1 tsp ghee; add ½ tsp cumin seeds, 1 chopped garlic clove, and 1 dry red chili — let sizzle 30 sec.','Pour tempering over the cooked dal and mix.','In another pan, sauté 150g washed spinach with 1 chopped garlic clove in ½ tsp oil for 3–4 min until wilted.','Serve dal hot alongside the sautéed spinach.']},
+    {id:'d2',name:'Tofu & Veg Stir-Fry',time:12,cal:330,pro:24,steps:['Press 150g firm tofu under a weight for 5 min to remove water, then cube it.','Heat 1 tsp oil on high; pan-fry tofu 4–5 min until golden on all sides, then set aside.','Stir-fry 1 cup mixed vegetables (broccoli, bell pepper, carrot) for 3–4 min.','Return tofu, add 1 tbsp soy sauce, ½ tsp grated ginger, ½ tsp garlic; toss 2 min. Serve hot.']},
+    {id:'d3',name:'Palak Paneer',time:15,cal:380,pro:26,steps:['Blanch 200g spinach in boiling water for 2 min, then blend into a smooth purée.','Heat 1 tsp oil/ghee; sauté 2 tbsp chopped onion and 1 tsp ginger-garlic paste for 2 min.','Add ¼ tsp turmeric, 1 tsp garam masala, and the spinach purée; cook 4 min.','Add 150g paneer cubes and 2 tbsp fresh cream (or yogurt); simmer 3–4 min.','Season with salt, serve with a small roti or on its own.']},
+    {id:'d4',name:'Egg Drop Veg Soup + Toast',time:10,cal:300,pro:20,steps:['Bring 2 cups vegetable broth/water to a boil with 1 tsp soy sauce and ½ tsp grated ginger.','Add ½ cup chopped vegetables (carrot, beans, cabbage); simmer 4 min.','Whisk 2 eggs and slowly drizzle into the simmering soup while stirring gently to form ribbons.','Cook 1 more min, season with salt and pepper.','Serve hot with 1 slice of toasted whole-grain bread.']},
+    {id:'d5',name:'Chana Masala + Roti',time:15,cal:360,pro:22,steps:['Heat 1 tsp oil; sauté 2 tbsp chopped onion until golden, 3 min.','Add 1 tsp ginger-garlic paste, 2 tbsp tomato purée, ½ tsp turmeric, 1 tsp chana masala; cook 3 min.','Add 1.5 cups boiled/canned chickpeas with ¼ cup water; simmer 6–7 min, mashing a few for thickness.','Season with salt and lemon juice, garnish with coriander. Serve with one whole-wheat roti.']},
+    {id:'d6',name:'Mushroom & Egg Bhurji',time:10,cal:310,pro:24,steps:['Slice 100g mushrooms and chop 2 tbsp onion.','Heat 1 tsp oil; sauté onion 2 min, then add mushrooms and cook 3–4 min until softened.','Whisk 2 eggs with a pinch of salt and pepper; pour into the pan.','Scramble continuously for 2–3 min on medium-low heat until just set.','Garnish with coriander, serve warm on its own or with toast.']},
+    {id:'d7',name:'Sprouted Moong Stir-Fry',time:8,cal:280,pro:18,steps:['Heat 1 tsp oil in a pan; add ½ tsp mustard or cumin seeds, let them splutter.','Add 1 cup sprouted moong beans and ½ cup chopped tomato.','Stir-fry on medium heat for 5–6 min until sprouts are just tender.','Season with salt, turmeric, and a squeeze of lemon. Serve hot.']}
   ]
 };
+
 const SLOT_LABELS = {breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner'};
 
-// Nutrition per 100g (approx, common Indian/veg/egg ingredients)
-const INGREDIENTS = {
-  'Paneer': {cal:265, pro:18},
-  'Egg (per 1 large, ~50g)': {cal:78, pro:6.5, perUnit:true},
-  'Moong Dal (cooked)': {cal:105, pro:7.5},
-  'Rajma / Kidney Beans (cooked)': {cal:127, pro:8.7},
-  'Chickpeas (cooked)': {cal:164, pro:8.9},
-  'Soya Chunks (dry)': {cal:345, pro:52},
-  'Tofu': {cal:144, pro:15.8},
-  'Greek Yogurt': {cal:97, pro:9},
-  'Regular Yogurt/Curd': {cal:60, pro:3.5},
-  'Milk': {cal:60, pro:3.2},
-  'Oats (raw)': {cal:389, pro:16.9},
-  'Rice (cooked)': {cal:130, pro:2.7},
-  'Whole Wheat Roti (per 1 piece, ~40g)': {cal:104, pro:3.1, perUnit:true},
-  'Peanut Butter': {cal:588, pro:25},
-  'Almonds': {cal:579, pro:21},
-  'Peanuts (roasted)': {cal:567, pro:25.8},
-  'Spinach (raw)': {cal:23, pro:2.9},
-  'Mushroom': {cal:22, pro:3.1},
-  'Sprouts (moong, boiled)': {cal:30, pro:3},
-  'Protein Powder (per 1 scoop, ~30g)': {cal:120, pro:24, perUnit:true},
-  'Cheese (cheddar/processed)': {cal:402, pro:25},
-  'Onion': {cal:40, pro:1.1},
-  'Tomato': {cal:18, pro:0.9},
-  'Banana': {cal:89, pro:1.1},
-  'Mixed Vegetables': {cal:65, pro:3},
-  'Cooking Oil/Ghee (per 1 tsp, ~5g)': {cal:45, pro:0, perUnit:true},
+// Protein per 100g reference (for auto-calc of free-text ingredients)
+const PROTEIN_DB = {
+  'egg':13,'eggs':13,'paneer':18,'tofu':15,'soya chunks':52,'soya':52,
+  'moong dal':24,'rajma':24,'chickpeas':9,'chana':9,'kidney beans':24,
+  'greek yogurt':10,'yogurt':3.5,'curd':3.5,'milk':3.2,
+  'oats':17,'quinoa':14,'rice':2.7,'roti':3.1,'bread':8,
+  'peanut butter':25,'peanuts':26,'almonds':21,'cashews':18,
+  'spinach':2.9,'mushroom':3.1,'sprouts':3,'broccoli':2.8,
+  'cheese':25,'cottage cheese':11,'whey protein':80,'protein powder':75,
+  'lentils':9,'dal':9,'besan':22,'chickpea flour':22,
+};
+// Cal per 100g reference
+const CAL_DB = {
+  'egg':155,'eggs':155,'paneer':265,'tofu':144,'soya chunks':345,
+  'moong dal':347,'rajma':333,'chickpeas':364,'chana':364,
+  'greek yogurt':97,'yogurt':60,'curd':60,'milk':60,
+  'oats':389,'quinoa':368,'rice':130,'roti':260,'bread':265,
+  'peanut butter':588,'peanuts':567,'almonds':579,'cashews':553,
+  'spinach':23,'mushroom':22,'sprouts':30,'broccoli':34,
+  'cheese':402,'cottage cheese':98,'whey protein':370,'protein powder':370,
+  'lentils':353,'dal':353,'besan':387,'chickpea flour':387,
 };
 
-let customDishes = {breakfast:[], lunch:[], dinner:[]};
-
-function fmtDate(d){
-  return d.toISOString().slice(0,10);
+function lookupNutrition(name, qty, unit){
+  const key = name.toLowerCase().trim();
+  let pro = 0, cal = 0;
+  const knownPro = Object.keys(PROTEIN_DB).find(k => key.includes(k));
+  const knownCal = Object.keys(CAL_DB).find(k => key.includes(k));
+  const proVal = knownPro ? PROTEIN_DB[knownPro] : 0;
+  const calVal = knownCal ? CAL_DB[knownCal] : 0;
+  // Normalize to 100g equivalent
+  const u = (unit||'g').toLowerCase().trim();
+  let grams = parseFloat(qty) || 0;
+  if(u==='kg') grams *= 1000;
+  else if(u==='ml'||u==='l') grams = u==='l' ? grams*1000 : grams; // approx 1ml=1g
+  else if(u==='cup') grams *= 240;
+  else if(u==='tbsp') grams *= 15;
+  else if(u==='tsp') grams *= 5;
+  else if(u==='piece'||u==='pieces'||u==='slice'||u==='slices'||u==='whole') {
+    // treat as individual item — use full per-unit values if known
+    if(key.includes('egg')) { cal += 78 * grams; pro += 6.5 * grams; return {cal,pro}; }
+    if(key.includes('roti')) { cal += 104 * grams; pro += 3.1 * grams; return {cal,pro}; }
+    grams *= 50; // default item ~50g
+  }
+  pro = (proVal * grams) / 100;
+  cal = (calVal * grams) / 100;
+  return {cal, pro};
 }
+
+let customDishes = {breakfast:[], lunch:[], dinner:[]};
+let dayData = {breakfast:[], lunch:[], dinner:[]};
+let goals = {cal:2000, pro:120};
+let openCards = new Set();
+let currentDate = new Date(); currentDate.setHours(0,0,0,0);
+let dpViewDate = new Date();
+
+function fmtDate(d){ return d.toISOString().slice(0,10); }
 function dayLabel(d){
   const today = new Date(); today.setHours(0,0,0,0);
   const diff = Math.round((d-today)/86400000);
@@ -290,163 +344,293 @@ function dayLabel(d){
   return d.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase();
 }
 
-let currentDate = new Date(); currentDate.setHours(0,0,0,0);
-let dayData = {breakfast:[], lunch:[], dinner:[]};
-let goals = {cal:2000, pro:120};
-let openCards = new Set();
-
 function showToast(msg){
   const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 1500);
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1600);
 }
 
+// ── Storage ──────────────────────────────────────────────
 async function loadGoals(){
-  try{
-    const r = await window.storage.get('goals', false);
-    if(r && r.value){ goals = JSON.parse(r.value); }
-  }catch(e){}
-  document.getElementById('calGoal').value = goals.cal;
-  document.getElementById('proGoal').value = goals.pro;
+  try{ const r=await window.storage.get('goals'); if(r) goals=JSON.parse(r.value); }catch(e){}
+  document.getElementById('calGoal').value=goals.cal;
+  document.getElementById('proGoal').value=goals.pro;
 }
 async function saveGoals(){
-  goals.cal = parseInt(document.getElementById('calGoal').value)||2000;
-  goals.pro = parseInt(document.getElementById('proGoal').value)||120;
-  try{ await window.storage.set('goals', JSON.stringify(goals), false); }catch(e){}
+  goals.cal=parseInt(document.getElementById('calGoal').value)||2000;
+  goals.pro=parseInt(document.getElementById('proGoal').value)||120;
+  try{ await window.storage.set('goals',JSON.stringify(goals)); }catch(e){}
   render();
 }
-
 async function loadDay(){
-  const key = 'log:'+fmtDate(currentDate);
-  try{
-    const r = await window.storage.get(key, false);
-    dayData = r && r.value ? JSON.parse(r.value) : {breakfast:[], lunch:[], dinner:[]};
-  }catch(e){
-    dayData = {breakfast:[], lunch:[], dinner:[]};
-  }
+  const key='log:'+fmtDate(currentDate);
+  try{ const r=await window.storage.get(key); dayData=r?JSON.parse(r.value):{breakfast:[],lunch:[],dinner:[]}; }
+  catch(e){ dayData={breakfast:[],lunch:[],dinner:[]}; }
   render();
 }
 async function saveDay(){
-  const key = 'log:'+fmtDate(currentDate);
-  try{ await window.storage.set(key, JSON.stringify(dayData), false); }catch(e){ showToast('Save failed'); }
+  try{ await window.storage.set('log:'+fmtDate(currentDate),JSON.stringify(dayData)); }catch(e){}
 }
-
-function findDish(slot, id){
-  return DISHES[slot].find(d=>d.id===id) || customDishes[slot].find(d=>d.id===id);
-}
-
 async function loadCustomDishes(){
-  try{
-    const r = await window.storage.get('customDishes', false);
-    if(r && r.value) customDishes = JSON.parse(r.value);
-  }catch(e){}
+  try{ const r=await window.storage.get('customDishes'); if(r) customDishes=JSON.parse(r.value); }catch(e){}
 }
 async function saveCustomDishes(){
-  try{ await window.storage.set('customDishes', JSON.stringify(customDishes), false); }catch(e){ showToast('Could not save custom dish'); }
+  try{ await window.storage.set('customDishes',JSON.stringify(customDishes)); }catch(e){}
 }
 
-function buildIngOptions(){
-  return Object.keys(INGREDIENTS).map(k=>`<option value="${k}">${k}</option>`).join('');
-}
-function addIngRow(){
-  const row = document.createElement('div');
-  row.className = 'ing-row';
-  row.innerHTML = `
-    <select class="ing-select">${buildIngOptions()}</select>
-    <input type="number" class="ing-qty" placeholder="${'qty'}" value="100">
-    <button class="ing-del" title="Remove">✕</button>`;
-  document.getElementById('ingRows').appendChild(row);
-  row.querySelector('.ing-del').addEventListener('click', ()=>{ row.remove(); recalcLive(); });
-  row.querySelector('.ing-select').addEventListener('change', updateQtyPlaceholder);
-  row.querySelector('.ing-qty').addEventListener('input', recalcLive);
-  updateQtyPlaceholder.call(row.querySelector('.ing-select'));
-  recalcLive();
-}
-function updateQtyPlaceholder(){
-  const sel = this;
-  const row = sel.closest('.ing-row');
-  const info = INGREDIENTS[sel.value];
-  const qtyInput = row.querySelector('.ing-qty');
-  if(info && info.perUnit){ qtyInput.placeholder = 'count (e.g. 1)'; if(qtyInput.value=='100') qtyInput.value=1; }
-  else { qtyInput.placeholder = 'grams (e.g. 100)'; if(qtyInput.value==1) qtyInput.value=100; }
-  recalcLive();
-}
-function recalcLive(){
-  let cal=0, pro=0;
-  document.querySelectorAll('#ingRows .ing-row').forEach(row=>{
-    const name = row.querySelector('.ing-select').value;
-    const qty = parseFloat(row.querySelector('.ing-qty').value)||0;
-    const info = INGREDIENTS[name];
-    if(!info) return;
-    if(info.perUnit){ cal += info.cal*qty; pro += info.pro*qty; }
-    else { cal += (info.cal*qty)/100; pro += (info.pro*qty)/100; }
+// ── Date Picker ───────────────────────────────────────────
+function buildDatePicker(){
+  const y=dpViewDate.getFullYear(), m=dpViewDate.getMonth();
+  document.getElementById('dpMonthYear').textContent =
+    new Date(y,m,1).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+  const grid=document.getElementById('dpGrid');
+  grid.innerHTML='';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{
+    const el=document.createElement('div'); el.className='dp-dayname'; el.textContent=d; grid.appendChild(el);
   });
-  document.getElementById('liveCalc').textContent = `Estimated: ${Math.round(cal)} kcal · ${Math.round(pro*10)/10}g protein`;
-  return {cal:Math.round(cal), pro:Math.round(pro*10)/10};
+  const firstDay=new Date(y,m,1).getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let i=0;i<firstDay;i++){
+    const el=document.createElement('button'); el.className='dp-day empty'; el.disabled=true; grid.appendChild(el);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const date=new Date(y,m,d);
+    const el=document.createElement('button');
+    el.className='dp-day';
+    el.textContent=d;
+    if(date.getTime()===today.getTime()) el.classList.add('today');
+    if(date.getTime()===currentDate.getTime()) el.classList.add('selected');
+    el.addEventListener('click',()=>{
+      currentDate=new Date(y,m,d); currentDate.setHours(0,0,0,0);
+      document.getElementById('datePickerOverlay').classList.add('hidden');
+      openCards.clear(); loadDay();
+    });
+    grid.appendChild(el);
+  }
+}
+document.getElementById('dateLabel').addEventListener('click',()=>{
+  dpViewDate=new Date(currentDate);
+  buildDatePicker();
+  document.getElementById('datePickerOverlay').classList.remove('hidden');
+});
+document.getElementById('dpPrevMonth').addEventListener('click',()=>{
+  dpViewDate.setMonth(dpViewDate.getMonth()-1); buildDatePicker();
+});
+document.getElementById('dpNextMonth').addEventListener('click',()=>{
+  dpViewDate.setMonth(dpViewDate.getMonth()+1); buildDatePicker();
+});
+document.getElementById('dpClose').addEventListener('click',()=>{
+  document.getElementById('datePickerOverlay').classList.add('hidden');
+});
+document.getElementById('prevDay').addEventListener('click',()=>{
+  currentDate.setDate(currentDate.getDate()-1); openCards.clear(); loadDay();
+});
+document.getElementById('nextDay').addEventListener('click',()=>{
+  currentDate.setDate(currentDate.getDate()+1); openCards.clear(); loadDay();
+});
+
+// ── Ingredient rows ────────────────────────────────────────
+function addIngRow(name='', qty='', unit='g', container='ingRows'){
+  const row=document.createElement('div');
+  row.className='ing-row';
+  row.innerHTML=`
+    <input type="text" class="ing-name" placeholder="e.g. Paneer" value="${name}">
+    <input type="number" class="ing-qty" placeholder="100" value="${qty}">
+    <input type="text" class="ing-unit" placeholder="g" value="${unit}">
+    <button class="ing-del" title="Remove">✕</button>`;
+  document.getElementById(container).appendChild(row);
+  row.querySelector('.ing-del').addEventListener('click',()=>{ row.remove(); recalcLive(container); });
+  row.querySelector('.ing-name').addEventListener('input',()=>recalcLive(container));
+  row.querySelector('.ing-qty').addEventListener('input',()=>recalcLive(container));
+  row.querySelector('.ing-unit').addEventListener('input',()=>recalcLive(container));
 }
 
-document.getElementById('toggleCustom').addEventListener('click', ()=>{
-  const f = document.getElementById('customForm');
-  f.classList.toggle('open');
-  if(f.classList.contains('open') && document.getElementById('ingRows').children.length===0){
-    addIngRow();
-  }
-});
-document.getElementById('addIngRow').addEventListener('click', addIngRow);
+function recalcLive(container='ingRows', calcElId='liveCalc'){
+  let cal=0, pro=0;
+  document.querySelectorAll('#'+container+' .ing-row').forEach(row=>{
+    const name=row.querySelector('.ing-name').value;
+    const qty=row.querySelector('.ing-qty').value;
+    const unit=row.querySelector('.ing-unit').value;
+    if(!name) return;
+    const n=lookupNutrition(name,qty,unit);
+    cal+=n.cal; pro+=n.pro;
+  });
+  const el=document.getElementById(calcElId);
+  if(el) el.textContent=`Estimated: ${Math.round(cal)} kcal · ${Math.round(pro*10)/10}g protein`;
+  return{cal:Math.round(cal),pro:Math.round(pro*10)/10};
+}
 
+function getIngRows(container='ingRows'){
+  return [...document.querySelectorAll('#'+container+' .ing-row')].map(row=>({
+    name:row.querySelector('.ing-name').value.trim(),
+    qty:row.querySelector('.ing-qty').value,
+    unit:row.querySelector('.ing-unit').value.trim()||'g'
+  })).filter(r=>r.name);
+}
+
+// ── Custom dish form toggle ────────────────────────────────
+document.getElementById('toggleCustom').addEventListener('click',()=>{
+  const f=document.getElementById('customForm');
+  const open=f.classList.toggle('open');
+  if(open && document.getElementById('ingRows').children.length===0) addIngRow();
+});
+document.getElementById('addIngRow').addEventListener('click',()=>addIngRow());
+
+// ── Save / Update custom dish ─────────────────────────────
 document.getElementById('saveCustom').addEventListener('click', async ()=>{
-  const name = document.getElementById('cName').value.trim();
-  const slot = document.getElementById('cSlot').value;
-  const time = parseInt(document.getElementById('cTime').value) || 0;
-  const stepsRaw = document.getElementById('cSteps').value.trim();
+  const name=document.getElementById('cName').value.trim();
+  const slot=document.getElementById('cSlot').value;
+  const time=parseInt(document.getElementById('cTime').value)||0;
+  const stepsRaw=document.getElementById('cSteps').value.trim();
+  const editId=document.getElementById('editId').value;
   if(!name){ showToast('Please enter a dish name'); return; }
-  if(!stepsRaw){ showToast('Please add at least one step'); return; }
-  const {cal, pro} = recalcLive();
-  const steps = stepsRaw.split('\n').map(s=>s.replace(/^\d+[\.\)]\s*/,'').trim()).filter(Boolean);
-  const dish = {
-    id: 'c'+Date.now(),
-    name, time, cal, pro, steps, custom:true
-  };
-  customDishes[slot].push(dish);
-  await saveCustomDishes();
-  // reset form
+  if(!stepsRaw){ showToast('Please add cooking steps'); return; }
+  const{cal,pro}=recalcLive();
+  const steps=stepsRaw.split('\n').map(s=>s.replace(/^\d+[\.\)]\s*/,'').trim()).filter(Boolean);
+  const ingredients=getIngRows();
+
+  if(editId){
+    // Update existing
+    let found=false;
+    ['breakfast','lunch','dinner'].forEach(s=>{
+      const idx=customDishes[s].findIndex(d=>d.id===editId);
+      if(idx!==-1){
+        const oldSlot=s;
+        customDishes[s].splice(idx,1); // remove from old slot
+        const updated={id:editId,name,time,cal,pro,steps,ingredients,custom:true};
+        customDishes[slot].push(updated);
+        // if slot changed, update day log refs
+        if(oldSlot!==slot){
+          dayData[oldSlot]=dayData[oldSlot].filter(id=>id!==editId);
+        }
+        found=true;
+      }
+    });
+    if(!found){ showToast('Dish not found'); return; }
+    showToast(`Updated "${name}"`);
+  } else {
+    const dish={id:'c'+Date.now(),name,time,cal,pro,steps,ingredients,custom:true};
+    customDishes[slot].push(dish);
+    showToast(`Saved "${name}" to ${SLOT_LABELS[slot]}`);
+  }
+
+  await saveCustomDishes(); await saveDay();
+  resetCustomForm(); render();
+});
+
+document.getElementById('cancelEdit').addEventListener('click',()=>{ resetCustomForm(); });
+
+function resetCustomForm(){
   document.getElementById('cName').value='';
   document.getElementById('cTime').value='';
   document.getElementById('cSteps').value='';
+  document.getElementById('editId').value='';
   document.getElementById('ingRows').innerHTML='';
-  addIngRow();
   document.getElementById('customForm').classList.remove('open');
-  showToast(`Saved "${name}" to ${SLOT_LABELS[slot]}`);
-  render();
-});
+  document.getElementById('cancelEdit').style.display='none';
+  document.getElementById('saveCustom').textContent='Save Recipe';
+  addIngRow();
+}
 
-function render(){
-  document.getElementById('dateLabel').innerHTML = `<small>${dayLabel(currentDate)}</small>${currentDate.toLocaleDateString('en-US',{month:'short', day:'numeric'})}`;
+function loadDishIntoForm(dish, slot){
+  document.getElementById('cName').value=dish.name;
+  document.getElementById('cSlot').value=slot;
+  document.getElementById('cTime').value=dish.time;
+  document.getElementById('cSteps').value=dish.steps.join('\n');
+  document.getElementById('editId').value=dish.id;
+  document.getElementById('ingRows').innerHTML='';
+  if(dish.ingredients && dish.ingredients.length){
+    dish.ingredients.forEach(ing=>addIngRow(ing.name,ing.qty,ing.unit));
+  } else {
+    addIngRow();
+  }
+  recalcLive();
+  const f=document.getElementById('customForm');
+  f.classList.add('open');
+  document.getElementById('cancelEdit').style.display='block';
+  document.getElementById('saveCustom').textContent='Update Recipe';
+  f.scrollIntoView({behavior:'smooth',block:'start'});
+}
 
-  let totalCal=0, totalPro=0;
+// ── Manage list (edit/delete custom dishes) ───────────────
+function renderManageList(){
+  const wrap=document.getElementById('manageList');
+  wrap.innerHTML='';
+  let hasAny=false;
   ['breakfast','lunch','dinner'].forEach(slot=>{
-    dayData[slot].forEach(id=>{
-      const d = findDish(slot,id);
-      if(d){ totalCal+=d.cal; totalPro+=d.pro; }
+    customDishes[slot].forEach(d=>{
+      hasAny=true;
+      const item=document.createElement('div');
+      item.className='manage-item';
+      item.innerHTML=`
+        <div>
+          <div class="mi-name">${d.name}</div>
+          <div class="mi-meta">${SLOT_LABELS[slot]} · ${d.cal} kcal · ${d.pro}g protein · ${d.time}min</div>
+        </div>
+        <div class="manage-actions">
+          <button class="pill-btn edit" data-edit="${d.id}" data-slot="${slot}">Edit</button>
+          <button class="pill-btn remove" data-del="${d.id}" data-slot="${slot}">Delete</button>
+        </div>`;
+      wrap.appendChild(item);
     });
   });
-  document.getElementById('calValue').innerHTML = `${totalCal} <small>/ ${goals.cal}</small>`;
-  document.getElementById('proValue').innerHTML = `${totalPro}g <small>/ ${goals.pro}g</small>`;
-  document.getElementById('calBar').style.width = Math.min(100,(totalCal/goals.cal)*100)+'%';
-  document.getElementById('proBar').style.width = Math.min(100,(totalPro/goals.pro)*100)+'%';
+  wrap.querySelectorAll('[data-edit]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id=btn.getAttribute('data-edit');
+      const slot=btn.getAttribute('data-slot');
+      const dish=customDishes[slot].find(d=>d.id===id);
+      if(dish) loadDishIntoForm(dish,slot);
+    });
+  });
+  wrap.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const id=btn.getAttribute('data-del');
+      const slot=btn.getAttribute('data-slot');
+      if(!confirm('Delete this custom dish?')) return;
+      customDishes[slot]=customDishes[slot].filter(d=>d.id!==id);
+      ['breakfast','lunch','dinner'].forEach(s=>{ dayData[s]=dayData[s].filter(i=>i!==id); });
+      await saveCustomDishes(); await saveDay();
+      render();
+      showToast('Dish deleted');
+    });
+  });
+}
 
-  const wrap = document.getElementById('slots');
-  wrap.innerHTML = '';
+// ── findDish ──────────────────────────────────────────────
+function findDish(slot,id){
+  return DISHES[slot].find(d=>d.id===id)||customDishes[slot].find(d=>d.id===id);
+}
+
+// ── Main render ───────────────────────────────────────────
+function render(){
+  document.getElementById('dateLabel').innerHTML=
+    `<small>${dayLabel(currentDate)}</small>${currentDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+
+  let totalCal=0,totalPro=0;
   ['breakfast','lunch','dinner'].forEach(slot=>{
-    const secTitle = document.createElement('div');
+    dayData[slot].forEach(id=>{
+      const d=findDish(slot,id);
+      if(d){totalCal+=d.cal;totalPro+=d.pro;}
+    });
+  });
+  document.getElementById('calValue').innerHTML=`${totalCal} <small>/ ${goals.cal}</small>`;
+  document.getElementById('proValue').innerHTML=`${totalPro}g <small>/ ${goals.pro}g</small>`;
+  document.getElementById('calBar').style.width=Math.min(100,(totalCal/goals.cal)*100)+'%';
+  document.getElementById('proBar').style.width=Math.min(100,(totalPro/goals.pro)*100)+'%';
+
+  const wrap=document.getElementById('slots');
+  wrap.innerHTML='';
+  ['breakfast','lunch','dinner'].forEach(slot=>{
+    const secTitle=document.createElement('div');
     secTitle.className='section-title';
-    secTitle.innerHTML = `${SLOT_LABELS[slot]} <span class="tag">${slot.toUpperCase()}</span>`;
+    secTitle.innerHTML=`${SLOT_LABELS[slot]} <span class="tag">${slot.toUpperCase()}</span>`;
     wrap.appendChild(secTitle);
 
-    const addRow = document.createElement('div');
+    const addRow=document.createElement('div');
     addRow.className='add-row';
-    const allOptions = [...DISHES[slot], ...customDishes[slot]];
-    addRow.innerHTML = `
+    const allOptions=[...DISHES[slot],...customDishes[slot]];
+    addRow.innerHTML=`
       <select class="dish-select" data-slot="${slot}">
         ${allOptions.map(d=>`<option value="${d.id}">${d.name}${d.custom?' ★':''} — ${d.pro}g protein, ${d.time}min</option>`).join('')}
       </select>
@@ -454,23 +638,23 @@ function render(){
     wrap.appendChild(addRow);
 
     if(dayData[slot].length===0){
-      const e = document.createElement('div');
+      const e=document.createElement('div');
       e.className='empty-slot';
-      e.textContent = `No ${slot} logged yet — pick a dish above to add it.`;
+      e.textContent=`No ${slot} logged yet — pick a dish above.`;
       wrap.appendChild(e);
     }
 
-    dayData[slot].forEach((id, idx)=>{
-      const d = findDish(slot,id);
+    dayData[slot].forEach((id,idx)=>{
+      const d=findDish(slot,id);
       if(!d) return;
-      const cardId = slot+'-'+idx;
-      const card = document.createElement('div');
-      card.className = 'meal-card' + (openCards.has(cardId)?' open':'');
-      card.innerHTML = `
+      const cardId=slot+'-'+idx;
+      const card=document.createElement('div');
+      card.className='meal-card'+(openCards.has(cardId)?' open':'');
+      card.innerHTML=`
         <div class="meal-head" data-card="${cardId}">
-          <div>
+          <div style="flex:1;min-width:0;">
             <div class="name">${d.name}${d.custom?'<span class="custom-tag">CUSTOM</span>':''}</div>
-            <div class="meta"><span>⏱ ${d.time} min</span><span>🔥 ${d.cal} kcal</span><span>💪 ${d.pro}g protein</span></div>
+            <div class="meta"><span>⏱ ${d.time}min</span><span>🔥 ${d.cal} kcal</span><span>💪 ${d.pro}g protein</span></div>
           </div>
           <div class="meal-actions">
             <button class="pill-btn remove" data-remove="${slot}:${idx}">Remove</button>
@@ -485,48 +669,41 @@ function render(){
   });
 
   wrap.querySelectorAll('[data-card]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const id = el.getAttribute('data-card');
+    el.addEventListener('click',()=>{
+      const id=el.getAttribute('data-card');
       if(openCards.has(id)) openCards.delete(id); else openCards.add(id);
       render();
     });
   });
   wrap.querySelectorAll('[data-remove]').forEach(el=>{
-    el.addEventListener('click', (e)=>{
+    el.addEventListener('click',(e)=>{
       e.stopPropagation();
-      const [slot, idx] = el.getAttribute('data-remove').split(':');
+      const[slot,idx]=el.getAttribute('data-remove').split(':');
       dayData[slot].splice(parseInt(idx),1);
       saveDay(); render();
     });
   });
   wrap.querySelectorAll('[data-addslot]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const slot = el.getAttribute('data-addslot');
-      const sel = wrap.querySelector(`select[data-slot="${slot}"]`);
+    el.addEventListener('click',()=>{
+      const slot=el.getAttribute('data-addslot');
+      const sel=wrap.querySelector(`select[data-slot="${slot}"]`);
       dayData[slot].push(sel.value);
       saveDay(); render();
       showToast('Added to '+SLOT_LABELS[slot]);
     });
   });
+
+  renderManageList();
 }
 
-document.getElementById('prevDay').addEventListener('click', ()=>{
-  currentDate.setDate(currentDate.getDate()-1);
-  openCards.clear();
-  loadDay();
-});
-document.getElementById('nextDay').addEventListener('click', ()=>{
-  currentDate.setDate(currentDate.getDate()+1);
-  openCards.clear();
-  loadDay();
-});
-document.getElementById('calGoal').addEventListener('change', saveGoals);
-document.getElementById('proGoal').addEventListener('change', saveGoals);
+document.getElementById('calGoal').addEventListener('change',saveGoals);
+document.getElementById('proGoal').addEventListener('change',saveGoals);
 
 (async function init(){
   await loadGoals();
   await loadCustomDishes();
   await loadDay();
+  addIngRow();
 })();
 </script>
 </body>
